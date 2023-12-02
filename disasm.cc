@@ -178,3 +178,5 @@ ret disassembler::consume() {
 }
 
 #undef defer
+#undef __IMP_CONCAT2
+#undef __IMP_CONCAT

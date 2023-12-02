@@ -172,8 +172,7 @@ namespace test {
 
       ::disasm::disassembler d(code);
       auto                   v = d.consume();
-      printf("%d\n", v.index());
-      auto x = std::get_if<::disasm::addReg32Imm32>(&v);
+      auto                   x = std::get_if<::disasm::addReg32Imm32>(&v);
       TEST(x);
       TEST(x->gpr == proc::gpr::eax);
       TEST(x->imm == 0x44332211);
@@ -194,6 +193,50 @@ namespace test {
       TEST(std::holds_alternative<::disasm::none>(v5));
 
       announce("testAdd2 finished");
+    }
+
+    void testInc() {
+      announce("testInc");
+
+      const uint8_t code[] = {
+          0xb8, 0xff, 0xff, 0xff, 0xff, // mov eax, 0xffffffff
+          0x40,                         // inc eax
+      };
+
+      ::disasm::disassembler d(code);
+      auto                   v = d.consume();
+      auto                   x = std::get_if<::disasm::movReg32>(&v);
+      TEST(x->gpr == proc::gpr::eax);
+      TEST(x->imm == 0xffffffff);
+      auto v2 = d.consume();
+      auto x2 = std::get_if<::disasm::incReg32>(&v2);
+      TEST(x2->gpr == proc::gpr::eax);
+      auto v3 = d.consume();
+      TEST(std::holds_alternative<::disasm::none>(v3));
+
+      announce("testInc finished");
+    }
+
+    void testDec() {
+      announce("testDec");
+
+      const uint8_t code[] = {
+          0xb8, 0x00, 0x00, 0x00, 0x00, // mov eax, 0
+          0x48,                         // dex eax
+      };
+
+      ::disasm::disassembler d(code);
+      auto                   v = d.consume();
+      auto                   x = std::get_if<::disasm::movReg32>(&v);
+      TEST(x->gpr == proc::gpr::eax);
+      TEST(x->imm == 0);
+      auto v2 = d.consume();
+      auto x2 = std::get_if<::disasm::decReg32>(&v2);
+      TEST(x2->gpr == proc::gpr::eax);
+      auto v3 = d.consume();
+      TEST(std::holds_alternative<::disasm::none>(v3));
+
+      announce("testDec finished");
     }
 
     void testTest() {
@@ -354,6 +397,49 @@ namespace test {
       announce("testAdd5 finished");
     }
 
+    void testInc() {
+      announce("testInc");
+
+      const uint8_t code[] = {
+          0xb8, 0xff, 0xff, 0xff, 0xff, // mov eax, 0xffffffff
+          0x40,                         // inc eax
+      };
+
+      ::emu e(code, 0);
+      bool  running = true;
+      while (running) {
+        e.cpu.dump();
+        running = e.execBool();
+      }
+
+      TEST(e.cpu.gprs[proc::gpr::eax] == 0);
+      TEST(!(e.cpu.flags & proc::flags::carryFlag));
+      TEST(e.cpu.flags & proc::flags::zeroFlag);
+
+      announce("testInc finished");
+    }
+
+    void testDec() {
+      announce("testDec");
+
+      const uint8_t code[] = {
+          0xb8, 0x00, 0x00, 0x00, 0x00, // mov eax, 0
+          0x48,                         // dec eax
+      };
+
+      ::emu e(code, 0);
+      bool  running = true;
+      while (running) {
+        e.cpu.dump();
+        running = e.execBool();
+      }
+
+      TEST(e.cpu.gprs[proc::gpr::eax] == 0xffffffff);
+      TEST(e.cpu.flags & proc::flags::signFlag);
+
+      announce("testDec finished");
+    }
+
     void testPushPop1() {
       announce("testPushPop1");
 
@@ -432,6 +518,8 @@ int main() {
   test::disasm::testPushPop2();
   test::disasm::testAdd1();
   test::disasm::testAdd2();
+  test::disasm::testInc();
+  test::disasm::testDec();
   test::disasm::testTest();
   test::emu::testGprMapping();
   test::emu::testAdd1();
@@ -439,6 +527,8 @@ int main() {
   test::emu::testAdd3();
   test::emu::testAdd4();
   test::emu::testAdd5();
+  test::emu::testInc();
+  test::emu::testDec();
   test::emu::testPushPop1();
   test::emu::testPushPop2();
   test::emu::testTest();
