@@ -61,6 +61,12 @@ ret disassembler::consume() {
     operandSizePrefix = addressSizePrefix = false;
   }};
 
+  auto handleSizeWraparound = [&]<typename T>(T n) -> T {
+    auto space = utl::maxN<sizeof(T) * 8>::u - n;
+    if (space < lastLength) return (lastLength - space) - 1;
+    return n + lastLength;
+  };
+
   if (*c == 0x6a) {
     // push imm8, extended to imm16 if prefix
 
@@ -170,6 +176,19 @@ ret disassembler::consume() {
       if (operandSizePrefix) return testReg16Reg16 {r1, r2};
       return testReg32Reg32 {r1, r2};
     }
+  } else if (*c == 0xe8) {
+    // operand
+    ENSURE_AND_SET_LEN$(operandSizePrefix, 2, 4);
+    c++;
+
+    if (operandSizePrefix) return callNear16 {handleSizeWraparound(utl::readU16(c))};
+    return callNear32 {handleSizeWraparound(utl::readU32(c))};
+  } else if (*c == 0xe9) {
+    ENSURE_AND_SET_LEN$(operandSizePrefix, 2, 4);
+    c++;
+
+    if (operandSizePrefix) return jmpNear16 {handleSizeWraparound(utl::readU16(c))};
+    return jmpNear32 {handleSizeWraparound(utl::readU32(c))};
   }
 
   return none {};

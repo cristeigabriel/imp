@@ -73,6 +73,15 @@ disasm::ret emu::exec() {
     testOp<uint16_t>(testreg16reg16->gpr, testreg16reg16->gpr2);
   else if (auto *testreg32reg32 = std::get_if<disasm::testReg32Reg32>(&insn))
     testOp<uint32_t>(testreg32reg32->gpr, testreg32reg32->gpr2);
+  else if (auto *callnear16 = std::get_if<disasm::callNear16>(&insn))
+    callAbs<uint16_t>(callnear16->addr,
+                      ds.length()); // already handled disp on addr for us
+  else if (auto *callnear32 = std::get_if<disasm::callNear32>(&insn))
+    callAbs<uint32_t>(callnear32->addr, ds.length()); // ditto
+  else if (auto *jmpnear16 = std::get_if<disasm::jmpNear16>(&insn))
+    jmpAbs<uint16_t>(jmpnear16->addr); // already handled disp for us
+  else if (auto *jmpnear32 = std::get_if<disasm::jmpNear32>(&insn))
+    jmpAbs<uint32_t>(jmpnear32->addr); // ditto
 
   cpu.eip += ds.length();
   return insn;

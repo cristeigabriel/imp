@@ -8,6 +8,8 @@
 namespace disasm {
   enum instructionType {
     MOV,
+    JMP,
+    CALL,
     TEST,
     ADD,
     ADC,
@@ -162,12 +164,33 @@ namespace disasm {
     proc::gpr             gpr2;
   };
 
+  struct jmpNear16 {
+    static constexpr auto type = instructionType::JMP;
+    uint16_t              addr; // not short jump, therefore unsigned
+  };
+
+  struct jmpNear32 {
+    static constexpr auto type = instructionType::JMP;
+    uint32_t              addr; // ditto
+  };
+
+  struct callNear16 {
+    static constexpr auto type = instructionType::CALL;
+    uint16_t              addr;
+  };
+
+  struct callNear32 {
+    static constexpr auto type = instructionType::CALL;
+    uint32_t              addr;
+  };
+
   using memoryViewType = std::span<const uint8_t>;
 
-  using ret = std::variant<none, pushImm8, pushImm16From8, pushImm16, pushImm32, pushReg16, pushReg32, popReg16,
-                           popReg32, movReg16, movReg32, addReg16Imm8, addReg32Imm8, adcReg16Imm8, adcReg32Imm8,
-                           andReg16Imm8, andReg32Imm8, addReg16Imm16, addReg32Imm32, addAxImm16, addEaxImm32, incReg16,
-                           incReg32, decReg16, decReg32, testReg16Reg16, testReg32Reg32>;
+  using ret
+      = std::variant<none, pushImm8, pushImm16From8, pushImm16, pushImm32, pushReg16, pushReg32, popReg16, popReg32,
+                     movReg16, movReg32, addReg16Imm8, addReg32Imm8, adcReg16Imm8, adcReg32Imm8, andReg16Imm8,
+                     andReg32Imm8, addReg16Imm16, addReg32Imm32, addAxImm16, addEaxImm32, incReg16, incReg32, decReg16,
+                     decReg32, testReg16Reg16, testReg32Reg32, jmpNear16, jmpNear32, callNear16, callNear32>;
 
   struct disassembler {
     disassembler() = default;

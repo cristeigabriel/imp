@@ -325,4 +325,32 @@ struct emu {
     updateZeroFlag(n);
     updateParityFlag(n);
   }
+
+  template <typename T>
+    requires(std::is_unsigned_v<T> && (sizeof(T) == 2 || sizeof(T) == 4))
+  void jmpAbs(T n) noexcept {
+    uint32_t eip = n;
+    cpu.eip      = eip;
+  }
+
+  template <typename T>
+    requires(std::is_unsigned_v<T> && (sizeof(T) == 2 || sizeof(T) == 4))
+  void callAbs(T n, size_t lastLength) noexcept {
+    uint32_t ret = cpu.eip + lastLength;
+    // set up return address
+    // will be at ebp+4
+    pushImm(ret); // push the would-be eip
+                  // (once the instruction is fetched, it starts
+                  // executing, and fetching should continue.
+                  //
+                  // - does this imply some logical error in the
+                  //   emulator?
+    // set up ebp
+    pushImm(cpu.gprs[proc::gpr::ebp]);
+    // logically, if we dereference ebp now, we get the contents
+    // at ebp, which is the previous stack frame
+    cpu.gprs[proc::gpr::ebp] = cpu.gprs[proc::gpr::esp];
+    // actually go where we decided to go
+    jmpAbs(n);
+  }
 };
