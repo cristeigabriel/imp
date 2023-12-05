@@ -83,6 +83,7 @@ disasm::ret emu::exec() {
   else if (auto *jmpnear32 = std::get_if<disasm::jmpNear32>(&insn))
     jmpAbs<uint32_t>(jmpnear32->addr); // ditto
 
+  // TODO: prevent this if we do call/jump, i forgot!
   cpu.eip += ds.length();
   return insn;
 }
