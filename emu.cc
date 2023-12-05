@@ -83,7 +83,10 @@ disasm::ret emu::exec() {
   else if (auto *jmpnear32 = std::get_if<disasm::jmpNear32>(&insn))
     jmpAbs<uint32_t>(jmpnear32->addr); // ditto
 
-  // TODO: prevent this if we do call/jump, i forgot!
-  cpu.eip += ds.length();
+	// eip increase may be disabled (e.g.) just call/jmp-ed
+	// and this has changed eip. make increase eip true (default)
+	// again afterward, as it should be unless is explicitly told not to
+	if (increaseEip) cpu.eip += ds.length();
+	increaseEip = true;
   return insn;
 }

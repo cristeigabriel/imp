@@ -9,7 +9,7 @@
 
 struct emu {
   emu() = delete;
-  emu(disasm::memoryViewType code, uint32_t ep) : cpu(code, ep) {
+  emu(disasm::memoryViewType code, uint32_t ep) : cpu(code, ep), increaseEip(true) {
   }
 
   emu& operator=(const emu&) = delete;
@@ -96,6 +96,11 @@ struct emu {
       size_t                     size;
     } ram;
   } cpu;
+
+	///
+	/// Probably should be moved to CPU eventually
+	///
+	bool increaseEip = true;
 
   ///
   /// Operation helpers
@@ -329,6 +334,7 @@ struct emu {
   template <typename T>
     requires(std::is_unsigned_v<T> && (sizeof(T) == 2 || sizeof(T) == 4))
   void jmpAbs(T n) noexcept {
+		increaseEip  = false;
     uint32_t eip = n;
     cpu.eip      = eip;
   }
@@ -351,6 +357,7 @@ struct emu {
     // at ebp, which is the previous stack frame
     cpu.gprs[proc::gpr::ebp] = cpu.gprs[proc::gpr::esp];
     // actually go where we decided to go
+		// is also responsible for preventing eip increase
     jmpAbs(n);
   }
 };

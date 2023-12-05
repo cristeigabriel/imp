@@ -10,13 +10,12 @@
 namespace test {
   inline void announce(const char* s, std::source_location S = std::source_location::current()) {
     auto fn = std::string_view(S.function_name());
-    fn      = fn.substr(fn.find("test::"));
+    printf("%s\n", fn.data());
     printf("==== %s:%s:%d: %s\n", fn.data(), S.file_name(), S.line(), s);
   }
 
   inline void fail(std::source_location S = std::source_location::current()) {
     auto fn = std::string_view(S.function_name());
-    fn      = fn.substr(fn.find("test::"));
     fprintf(stderr, "%s:%s:%d: failed test\n", fn.data(), S.file_name(), S.line());
     assert("fail!");
 #ifndef DEBUG

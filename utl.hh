@@ -10,8 +10,8 @@
 namespace utl {
   template <size_t N>
   struct maxN {
-    static constexpr uint32_t s = (1 << (N - 1)) - 1;
-    static constexpr uint32_t u = (1 << (N - 1)) + s;
+    static constexpr uint32_t s = (1u << (N - 1u)) - 1u;
+    static constexpr uint32_t u = (1u << (N - 1u)) + s;
   };
 
   static void delim() noexcept {
