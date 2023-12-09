@@ -10,7 +10,6 @@
 namespace test {
   inline void announce(const char* s, std::source_location S = std::source_location::current()) {
     auto fn = std::string_view(S.function_name());
-    printf("%s\n", fn.data());
     printf("==== %s:%s:%d: %s\n", fn.data(), S.file_name(), S.line(), s);
   }
 
@@ -505,6 +504,30 @@ namespace test {
 
       announce("testTest finished");
     }
+
+    void testJmp() {
+      announce("testJmp");
+
+      const uint8_t code[] = {
+          0xe9, 0x10 - 0x5, 0x00, 0x00, 0x00,       // jmp 16
+          0x11, 0x22,       0x33, 0x44, 0x55,       //
+          0x66, 0x77,       0x88, 0x99, 0x11, 0x22, //
+          0xb8, 0xff,       0xff, 0xff, 0xff,       // mov eax, 0xffffffff
+          0xb9, 0xff,       0xff, 0xff, 0xff,       // mov ecx, 0xffffffff
+      };
+
+      ::emu e(code, 0);
+      bool  running = true;
+      while (running) {
+        e.cpu.dump();
+        running = e.execBool();
+      }
+
+      TEST(e.cpu.gprs[proc::gpr::eax] == 0xffffffff);
+      TEST(e.cpu.gprs[proc::gpr::ecx] == 0xffffffff);
+
+      announce("testJmp finished");
+    }
   } // namespace emu
 
 #undef TEST
@@ -531,5 +554,6 @@ int main() {
   test::emu::testPushPop1();
   test::emu::testPushPop2();
   test::emu::testTest();
+  test::emu::testJmp();
   return 0;
 }
